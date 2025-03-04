@@ -1,0 +1,10 @@
+pip install alembic supabase python-dotenv
+
+--------------------------------
+Initialize the database:
+alembic init alembic
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+
+--------------------------------
+psql -U your_username -d qtric_db -f migrations/initial_data.sql
