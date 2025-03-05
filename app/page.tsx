@@ -14,7 +14,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Add your authentication logic here
-    router.push('/managements')
+    router.push('/project-timeline')
   }
 
   return (
