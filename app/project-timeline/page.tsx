@@ -72,94 +72,6 @@ export default function ProjectTimeline() {
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load projects. Please try again later.');
-        // Use sample data if API fails
-        setProjects([
-          {
-            id: "1",
-            name: "QTRic Association",
-            progress: 25,
-            deadline: "15 Apr 2025",
-            daysRemaining: 44,
-            status: 'onTime'
-          },
-          {
-            id: "2",
-            name: "SEA Quantathon",
-            keyPersons: "Pak Choong, Areeya, Sarat",
-            progress: 70,
-            deadline: "1 Feb 2025",
-            daysRemaining: 121,
-            status: 'onTime'
-          },
-          {
-            id: "3",
-            name: "QTRI2025",
-            progress: 45,
-            deadline: "5 Jul 2025",
-            daysRemaining: 156,
-            status: 'onTime'
-          },
-          {
-            id: "4",
-            name: "Korea Commercial Collaboration",
-            keyPersons: "James Lee",
-            progress: 90,
-            deadline: "31 Mar 2025",
-            daysRemaining: 29,
-            status: 'nearDeadline'
-          },
-          {
-            id: "5",
-            name: "Education Sandbox (Brain power)",
-            keyPersons: "A. Nick, A. Pruat",
-            progress: 5,
-            deadline: "15 Jun 2025",
-            daysRemaining: 105,
-            status: 'overdue'
-          },
-          {
-            id: "6",
-            name: "Quick-win manpower/ upskill-reskill/ PMU B",
-            progress: 30,
-            deadline: "30 May 2025",
-            daysRemaining: 89,
-            status: 'onTime'
-          },
-          {
-            id: "7",
-            name: "SQV Tours",
-            keyPersons: "Din",
-            progress: 65,
-            deadline: "10 Apr 2025",
-            daysRemaining: 39,
-            status: 'onTime'
-          },
-          {
-            id: "8",
-            name: "China-Thailand Hub for Clean Energy Soluti K. Noi",
-            progress: 30,
-            deadline: "15 May 2025",
-            daysRemaining: 74,
-            status: 'onTime'
-          },
-          {
-            id: "9",
-            name: "IDEAL Philipines-Thailand",
-            keyPersons: "Dylan",
-            progress: 10,
-            deadline: "1 Sep 2025",
-            daysRemaining: 183,
-            status: 'overdue'
-          },
-          {
-            id: "10",
-            name: "Legal platform for international collaboration",
-            progress: 15,
-            deadline: "30 Jun 2025",
-            daysRemaining: 120,
-            status: 'onTime'
-          },
-        ]);
       } finally {
         setLoading(false);
       }
@@ -173,20 +85,25 @@ export default function ProjectTimeline() {
     try {
       setIsSaving(true);
       
-      // เพิ่ม timestamp
+      // Format the project data to match the curl example format
       const projectToAdd = {
-        ...project,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        name: project.name,
+        keyPersons: project.keyPersons || '',
+        progress: project.progress,
+        deadline: project.deadline,
+        daysRemaining: project.daysRemaining,
+        status: project.status,
       };
       
-      // ส่งข้อมูลไปยัง API
+      // Send data to API using the format from the curl example
       const response = await axios.post('http://localhost:3000/api/projects', projectToAdd);
       
-      // อัพเดตรายการโปรเจกต์
+      console.log('Project added:', response.data);
+
+      // Update projects list with the response
       setProjects(prev => [...prev, response.data]);
       
-      // ปิด modal
+      // Close modal
       setIsAddingNew(false);
       
     } catch (error) {
@@ -319,6 +236,32 @@ export default function ProjectTimeline() {
     
     // จำกัดจำนวนโปรเจกต์ที่แสดง
     return displayCount === 'all' ? sorted : sorted.slice(0, displayCount);
+  };
+
+  // Add this function to handle project deletion
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      // Send delete request to API
+      await axios.delete(`http://localhost:3000/api/projects/${projectId}`);
+      
+      // Remove project from state
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      
+      // Close the edit modal
+      setSelectedProject(null);
+      
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Failed to delete project. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -571,6 +514,7 @@ export default function ProjectTimeline() {
               <ProjectForm
                 project={selectedProject}
                 onSave={handleSave}
+                onDelete={handleDeleteProject}
                 isSaving={isSaving}
               />
             </div>
@@ -585,10 +529,12 @@ export default function ProjectTimeline() {
 function ProjectForm({ 
   project, 
   onSave, 
+  onDelete,
   isSaving = false 
 }: { 
   project: Project, 
   onSave: (project: Project) => void,
+  onDelete?: (projectId: string) => void,
   isSaving?: boolean
 }) {
   const [formData, setFormData] = useState(project);
@@ -674,10 +620,10 @@ function ProjectForm({
         />
       </div>
       
-      <div className="pt-4">
+      <div className="pt-4 flex gap-2">
         <Button 
           type="submit" 
-          className="w-full bg-purple-600 hover:bg-purple-700"
+          className="flex-1 bg-purple-600 hover:bg-purple-700"
           disabled={isSaving}
         >
           {isSaving ? (
@@ -689,6 +635,18 @@ function ProjectForm({
             'Save Project'
           )}
         </Button>
+        
+        {onDelete && (
+          <Button 
+            type="button"
+            variant="destructive"
+            onClick={() => onDelete(project.id)}
+            disabled={isSaving}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Delete
+          </Button>
+        )}
       </div>
     </form>
   );
