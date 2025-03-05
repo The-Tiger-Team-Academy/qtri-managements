@@ -84,7 +84,8 @@ export default function ProjectsPage() {
   })
 
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Projects</h1>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Project Management</h1>

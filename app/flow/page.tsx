@@ -190,9 +190,9 @@ export default function FlowPage() {
   }
 
   return (
-    <div className="p-6 h-screen">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Flow</h1>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Flow Management</h1>
         <div className="flex space-x-2">
           <button
             onClick={() => addNode('trigger')}

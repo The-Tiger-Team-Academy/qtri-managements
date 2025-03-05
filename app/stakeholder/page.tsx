@@ -46,7 +46,7 @@ const initialStakeholders: Stakeholder[] = [
   }
 ]
 
-export default function StakeholderMapPage() {
+export default function StakeholderPage() {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(initialStakeholders)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<keyof Stakeholder>('name')
@@ -84,8 +84,8 @@ export default function StakeholderMapPage() {
     })
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">Stakeholder Map</h1>
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Stakeholder Map</h1>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <button

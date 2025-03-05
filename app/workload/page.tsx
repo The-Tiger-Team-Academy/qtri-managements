@@ -1,8 +1,11 @@
+'use client'
+
 import { FaTasks, FaUserClock, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa'
 
 export default function WorkloadPage() {
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Workload</h1>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Workload Management</h1>

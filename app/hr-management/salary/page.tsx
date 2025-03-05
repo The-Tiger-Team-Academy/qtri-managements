@@ -47,7 +47,7 @@ const initialEmployees: Employee[] = [
   }
 ]
 
-export default function SalaryManagementPage() {
+export default function SalaryPage() {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<keyof Employee>('name')
@@ -88,10 +88,10 @@ export default function SalaryManagementPage() {
     })
 
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Salary Management</h1>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Salary Management</h1>
         <div className="flex space-x-2">
           <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
             <FaFileExport className="mr-2" />

@@ -72,102 +72,104 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">AI Assistant</h1>
-        <div className="flex items-center text-gray-600">
-          <FaRobot className="w-5 h-5 mr-2" />
-          <span>Online</span>
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">AI Assistant</h1>
+      <div className="flex flex-col h-screen p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center text-gray-600">
+            <FaRobot className="w-5 h-5 mr-2" />
+            <span>Online</span>
+          </div>
         </div>
-      </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 mb-4">
-        <div className="space-y-4">
-          {messages.map(message => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 mb-4">
+          <div className="space-y-4">
+            {messages.map(message => (
               <div
-                className={`flex max-w-[70%] ${
-                  message.role === 'user'
-                    ? 'flex-row-reverse items-end'
-                    : 'items-start'
+                key={message.id}
+                className={`flex ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
                 <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
+                  className={`flex max-w-[70%] ${
                     message.role === 'user'
-                      ? 'bg-blue-500 ml-2'
-                      : 'bg-gray-500'
+                      ? 'flex-row-reverse items-end'
+                      : 'items-start'
                   }`}
                 >
-                  {message.role === 'user' ? (
-                    <FaUser className="w-4 h-4 text-white" />
-                  ) : (
-                    <FaRobot className="w-4 h-4 text-white" />
-                  )}
-                </div>
-                <div
-                  className={`rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white border'
-                  }`}
-                >
-                  <div className="mb-1">{message.content}</div>
                   <div
-                    className={`text-xs ${
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
                       message.role === 'user'
-                        ? 'text-blue-100'
-                        : 'text-gray-400'
+                        ? 'bg-blue-500 ml-2'
+                        : 'bg-gray-500'
                     }`}
                   >
-                    {formatTime(message.timestamp)}
+                    {message.role === 'user' ? (
+                      <FaUser className="w-4 h-4 text-white" />
+                    ) : (
+                      <FaRobot className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div
+                    className={`rounded-lg p-3 ${
+                      message.role === 'user'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white border'
+                    }`}
+                  >
+                    <div className="mb-1">{message.content}</div>
+                    <div
+                      className={`text-xs ${
+                        message.role === 'user'
+                          ? 'text-blue-100'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {formatTime(message.timestamp)}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white border rounded-lg p-4">
-                <FaSpinner className="w-5 h-5 animate-spin text-gray-500" />
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border rounded-lg p-4">
+                  <FaSpinner className="w-5 h-5 animate-spin text-gray-500" />
+                </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
-      </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-          disabled={isLoading || !input.trim()}
-        >
-          {isLoading ? (
-            <FaSpinner className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <FaPaperPlane className="w-5 h-5 mr-2" />
-              Send
-            </>
-          )}
-        </button>
-      </form>
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            disabled={isLoading || !input.trim()}
+          >
+            {isLoading ? (
+              <FaSpinner className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <FaPaperPlane className="w-5 h-5 mr-2" />
+                Send
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   )
 } 

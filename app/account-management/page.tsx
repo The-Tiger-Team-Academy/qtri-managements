@@ -94,7 +94,9 @@ export default function AccountManagementPage() {
   })
 
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+      <h1 className="text-2xl font-semibold mb-6">Settings</h1>
+      {/* เนื้อหาของหน้า Settings */}
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Account Management</h1>

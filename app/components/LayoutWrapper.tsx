@@ -33,16 +33,32 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   // ตรวจสอบว่าควรแสดงพื้นหลัง animation หรือไม่
   useEffect(() => {
-    // ถ้าต้องการยกเว้นบางหน้าไม่ให้มี animation ให้เพิ่มเงื่อนไขตรงนี้
-    // เช่น ถ้าไม่ต้องการให้หน้า dashboard มี animation
-    // setShowBackground(!pathname.includes('/dashboard'));
+    // กำหนดหน้าที่ต้องการให้มีพื้นหลังสีขาว (ไม่แสดง animation)
+    const whiteBackgroundPages = [
+      '/dashboard',
+      '/projects',
+      '/workflow',
+      '/hr-management',
+      '/hr-management/salary',
+      '/workload',
+      '/schedule',
+      '/stakeholder',
+      '/finance',
+      '/flow',
+      '/genbi',
+      '/chat',
+      '/account-management',
+      '/project-timeline'
+    ];
     
-    // หรือถ้าต้องการให้มีเฉพาะบางหน้า
-    // setShowBackground(pathname === '/' || pathname.includes('/about'));
+    // ตรวจสอบว่าหน้าปัจจุบันควรมีพื้นหลังสีขาวหรือไม่
+    const shouldHaveWhiteBackground = whiteBackgroundPages.some(page => 
+      pathname.startsWith(page)
+    );
     
-    // ในที่นี้เราจะให้แสดงทุกหน้า
-    setShowBackground(true)
-  }, [pathname])
+    // ตั้งค่าการแสดง background animation (true = แสดง, false = ไม่แสดง)
+    setShowBackground(!shouldHaveWhiteBackground);
+  }, [pathname]);
 
   return (
     <div className="flex flex-col min-h-screen">

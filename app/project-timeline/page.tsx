@@ -281,35 +281,37 @@ export default function ProjectTimeline() {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Project Timeline (2025-2027)</h1>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button onClick={() => setIsAddingNew(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Project
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <SheetHeader>
-              <SheetTitle>Add New Project</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <ProjectForm
-                project={{
-                  id: String(projectsData.length + 1),
-                  name: '',
-                  progress: 0,
-                  deadline: '',
-                  daysRemaining: 0,
-                  status: 'onTime'
-                }}
-                onSave={handleSave}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <h1 className="text-2xl font-semibold">Project Timeline</h1>
+        <div className="flex space-x-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Project
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Add New Project</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-4 mt-4">
+                <ProjectForm
+                  project={{
+                    id: String(projectsData.length + 1),
+                    name: '',
+                    progress: 0,
+                    deadline: '',
+                    daysRemaining: 0,
+                    status: 'onTime'
+                  }}
+                  onSave={handleSave}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       
       {/* Controls */}
@@ -343,15 +345,54 @@ export default function ProjectTimeline() {
         </Select>
       </div>
 
-      <Tabs defaultValue="2025" className="mb-6">
-        <TabsList>
-          <TabsTrigger value="2025" onClick={() => setActiveYear("2025")}>2025</TabsTrigger>
-          <TabsTrigger value="2026" onClick={() => setActiveYear("2026")}>2026</TabsTrigger>
-          <TabsTrigger value="2027" onClick={() => setActiveYear("2027")}>2027</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="2025" className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="2025">2025</TabsTrigger>
+            <TabsTrigger value="2026">2026</TabsTrigger>
+            <TabsTrigger value="2027">2027</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex items-center space-x-2">
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                <SelectItem value="onTime">On Time</SelectItem>
+                <SelectItem value="nearDeadline">Near Deadline</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Search projects..."
+                className="pl-8"
+              />
+              <svg
+                className="absolute left-2 top-2.5 h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
         
         <TabsContent value="2025" className="mt-4">
-          <div className="rounded-md border">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -442,7 +483,7 @@ export default function ProjectTimeline() {
             </Table>
           </div>
           
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-6 flex flex-col md:flex-row gap-6">
             <div>
               <h3 className="text-sm font-semibold mb-2">Progress Legend:</h3>
               <div className="flex gap-4">

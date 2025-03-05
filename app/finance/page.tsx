@@ -1,8 +1,10 @@
+'use client'
+
 import { FaChartLine, FaDollarSign, FaArrowUp, FaArrowDown } from 'react-icons/fa'
 
 export default function FinancePage() {
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Finance Analysis</h1>

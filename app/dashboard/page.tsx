@@ -94,37 +94,46 @@ export default function DashboardPage() {
     gridRef.current = grid
 
     // Add initial widgets
-    grid.load(initialWidgets.map(widget => ({
-      ...widget,
-      content: generateWidgetHTML(widget)
-    })))
-
-    // Render charts after widgets are loaded
     initialWidgets.forEach(widget => {
-      if (widget.type === 'chart') {
-        const chartElement = document.getElementById(`chart-${widget.id}`)
-        if (chartElement) {
-          new ChartJS(chartElement as HTMLCanvasElement, {
-            type: 'bar',
-            data: data,
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-            }
-          })
-        }
-      }
+      grid.addWidget({
+        ...widget,
+        content: generateWidgetHTML(widget)
+      })
     })
 
-    return () => {
-      if (gridRef.current) {
-        gridRef.current.removeAll()
-        gridRef.current.destroy(false)
+    // Initialize charts after widgets are added
+    setTimeout(() => {
+      const chartContainer = document.getElementById(`chart-${initialWidgets[0].id}`)
+      if (chartContainer) {
+        const canvas = document.createElement('canvas')
+        chartContainer.appendChild(canvas)
+        
+        new ChartJS(canvas, {
+          type: 'bar',
+          data: data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Monthly Revenue'
+              }
+            }
+          }
+        })
       }
+    }, 100)
+
+    return () => {
+      // grid.destroy()
     }
   }, [])
 
-  const getWidgetIcon = (type: string) => {
+  const getWidgetIcon = (type: string): string => {
     switch (type) {
       case 'chart':
         return `<div class="bg-blue-100 p-4 rounded-full">
@@ -194,7 +203,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
