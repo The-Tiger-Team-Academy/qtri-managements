@@ -1,14 +1,17 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Navigation from './Navigation'
 import NavBar from './NavBar'
 import { CalendarDays, HomeIcon, MessageSquare } from "lucide-react"
+import QuantumBackground from './QuantumBackground'
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/'
-
+  const [showBackground, setShowBackground] = useState(true)
+  
   // ค้นหาส่วนที่มีการกำหนด navigation links
   const navigationLinks = [
     {
@@ -28,8 +31,24 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     },
   ];
 
+  // ตรวจสอบว่าควรแสดงพื้นหลัง animation หรือไม่
+  useEffect(() => {
+    // ถ้าต้องการยกเว้นบางหน้าไม่ให้มี animation ให้เพิ่มเงื่อนไขตรงนี้
+    // เช่น ถ้าไม่ต้องการให้หน้า dashboard มี animation
+    // setShowBackground(!pathname.includes('/dashboard'));
+    
+    // หรือถ้าต้องการให้มีเฉพาะบางหน้า
+    // setShowBackground(pathname === '/' || pathname.includes('/about'));
+    
+    // ในที่นี้เราจะให้แสดงทุกหน้า
+    setShowBackground(true)
+  }, [pathname])
+
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
+      {/* Quantum Background */}
+      {showBackground && <QuantumBackground />}
+      
       {!isLoginPage && (
         <>
           <Navigation links={navigationLinks} />
@@ -39,6 +58,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       <main className={`${!isLoginPage ? 'ml-64 pt-16' : ''}`}>
         {children}
       </main>
-    </>
+    </div>
   )
 } 
