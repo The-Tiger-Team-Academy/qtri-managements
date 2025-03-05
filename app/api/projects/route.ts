@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
   // ในสถานการณ์จริง คุณอาจจะดึงข้อมูลจากฐานข้อมูล
@@ -11,7 +11,9 @@ export async function GET() {
       keyPersons: 'James Lee',
       progress: 90,
       deadline: '31 Mar 2025',
-      daysRemaining: 29
+      daysRemaining: 29,
+      createdAt: '2025-03-05T00:24:27.157Z',
+      updatedAt: '2025-03-05T04:52:33.657Z'
     },
     {
       id: '2',
@@ -97,6 +99,49 @@ export async function GET() {
   ]
 
   return NextResponse.json(projects, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // ในสถานการณ์จริง คุณจะบันทึกข้อมูลลงในฐานข้อมูล
+    // แต่ในตัวอย่างนี้เราจะเพียงส่งข้อมูลกลับไปพร้อมกับ ID ใหม่
+    
+    // ตรวจสอบว่ามี timestamp หรือไม่
+    const now = new Date().toISOString()
+    const newProject = {
+      ...body,
+      id: Date.now().toString(), // สร้าง ID ใหม่
+      createdAt: body.createdAt || now,
+      updatedAt: body.updatedAt || now
+    }
+    
+    return NextResponse.json(newProject, {
+      status: 201,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
+  } catch (error) {
+    console.error('Error creating project:', error)
+    return NextResponse.json(
+      { error: 'Failed to create project' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({}, {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',

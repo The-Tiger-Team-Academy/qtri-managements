@@ -30,6 +30,8 @@ interface Project {
   deadline: string;
   daysRemaining: number;
   status: 'onTime' | 'nearDeadline' | 'overdue' | 'completed';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function ProjectTimeline() {
@@ -37,11 +39,12 @@ export default function ProjectTimeline() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeYear, setActiveYear] = useState("2025");
-  const [displayCount, setDisplayCount] = useState<number | 'all'>('all');
+  const [displayCount, setDisplayCount] = useState<number | 'all'>(3);
   const [sortBy, setSortBy] = useState<'deadline' | 'progress'>('deadline');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch projects from API
   useEffect(() => {
@@ -59,7 +62,9 @@ export default function ProjectTimeline() {
           deadline: project.deadline,
           daysRemaining: project.daysRemaining,
           // กำหนดสถานะตามเงื่อนไข
-          status: getProjectStatus(project.progress, project.daysRemaining)
+          status: getProjectStatus(project.progress, project.daysRemaining),
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
         }));
         
         setProjects(formattedProjects);
@@ -163,6 +168,63 @@ export default function ProjectTimeline() {
     fetchProjects();
   }, []);
 
+  // ฟังก์ชันสำหรับการเพิ่มโปรเจกต์ใหม่
+  const handleAddProject = async (project: Project) => {
+    try {
+      setIsSaving(true);
+      
+      // เพิ่ม timestamp
+      const projectToAdd = {
+        ...project,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // ส่งข้อมูลไปยัง API
+      const response = await axios.post('http://localhost:3000/api/projects', projectToAdd);
+      
+      // อัพเดตรายการโปรเจกต์
+      setProjects(prev => [...prev, response.data]);
+      
+      // ปิด modal
+      setIsAddingNew(false);
+      
+    } catch (error) {
+      console.error('Error adding project:', error);
+      alert('Failed to add project. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ฟังก์ชันสำหรับการแก้ไขโปรเจกต์
+  const handleSave = async (project: Project) => {
+    try {
+      setIsSaving(true);
+      
+      // อัพเดต timestamp
+      const projectToUpdate = {
+        ...project,
+        updatedAt: new Date().toISOString()
+      };
+      
+      // ส่งข้อมูลไปยัง API
+      const response = await axios.put(`http://localhost:3000/api/projects/${project.id}`, projectToUpdate);
+      
+      // อัพเดตรายการโปรเจกต์
+      setProjects(prev => prev.map(p => p.id === project.id ? response.data : p));
+      
+      // ปิด modal
+      setSelectedProject(null);
+      
+    } catch (error) {
+      console.error('Error updating project:', error);
+      alert('Failed to update project. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // ฟังก์ชันกำหนดสถานะของโปรเจกต์
   const getProjectStatus = (progress: number, daysRemaining: number): Project['status'] => {
     if (progress >= 100) return 'completed';
@@ -218,122 +280,6 @@ export default function ProjectTimeline() {
     return specialProjects.includes(name) ? "bg-yellow-50" : "";
   };
 
-  // Filter projects based on year and search query
-  const filteredProjects = projects.filter(project => {
-    const matchesYear = project.deadline.includes(activeYear);
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (project.keyPersons?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                         project.status.toString().includes(searchQuery.toLowerCase());
-    
-    return matchesYear && matchesSearch;
-  });
-
-  // Sort projects
-  const getSortedProjects = () => {
-    const sorted = [...filteredProjects].sort((a, b) => {
-      if (sortBy === 'deadline') {
-        return a.daysRemaining - b.daysRemaining;
-      } else {
-        return b.progress - a.progress;
-      }
-    });
-    
-    if (displayCount === 'all') {
-      return sorted;
-    }
-    
-    return sorted.slice(0, displayCount as number);
-  };
-
-  // ฟังก์ชันสำหรับบันทึกการแก้ไขโปรเจกต์
-  const handleSave = (updatedProject: Project) => {
-    setProjects(prev => 
-      prev.map(p => p.id === updatedProject.id ? updatedProject : p)
-    );
-    setSelectedProject(null);
-    setIsAddingNew(false);
-  };
-
-  const ProjectForm = ({ project, onSave }: { project: Project, onSave: (project: Project) => void }) => {
-    const [formData, setFormData] = useState(project);
-    const [deadlineDate, setDeadlineDate] = useState<Date | null>(
-      project.deadline ? new Date(project.deadline) : null
-    );
-    
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      
-      // Calculate days remaining
-      const today = new Date();
-      const deadline = deadlineDate || today;
-      const diffTime = deadline.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      const updatedProject = {
-        ...formData,
-        deadline: deadlineDate ? deadlineDate.toLocaleDateString('en-US', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }) : '',
-        daysRemaining: diffDays,
-        status: diffDays < 0 ? 'overdue' : 
-                diffDays <= 14 ? 'nearDeadline' : 
-                formData.progress >= 100 ? 'completed' : 'onTime'
-      };
-      
-      onSave(updatedProject);
-    };
-    
-    return (
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Project Name</label>
-          <Input 
-            value={formData.name} 
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            required
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Key Persons</label>
-          <Input 
-            value={formData.keyPersons || ''} 
-            onChange={(e) => setFormData({...formData, keyPersons: e.target.value})}
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Progress (%)</label>
-          <Input 
-            type="number" 
-            min="0"
-            max="100"
-            value={formData.progress} 
-            onChange={(e) => setFormData({...formData, progress: parseInt(e.target.value)})}
-            required
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Deadline</label>
-          <DatePicker
-            selected={deadlineDate}
-            onChange={(date) => setDeadlineDate(date)}
-            dateFormat="dd MMM yyyy"
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        
-        <div className="pt-4">
-          <Button type="submit" className="w-full">Save Project</Button>
-        </div>
-      </form>
-    );
-  };
-
   // ฟังก์ชันสำหรับดึงเดือนจาก deadline
   const getDeadlineMonth = (deadline: string): number => {
     // รูปแบบ deadline: "31 Mar 2025"
@@ -351,59 +297,43 @@ export default function ProjectTimeline() {
     return 0;
   };
 
+  // Filter projects based on year and search query
+  const filteredProjects = projects.filter(project => {
+    const matchesYear = project.deadline.includes(activeYear);
+    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (project.keyPersons?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         project.status.toString().includes(searchQuery.toLowerCase());
+    
+    return matchesYear && matchesSearch;
+  });
+
+  // Sort projects
+  const getSortedProjects = () => {
+    const sorted = [...filteredProjects].sort((a, b) => {
+      if (sortBy === 'deadline') {
+        return a.daysRemaining - b.daysRemaining; // เรียงตาม daysRemaining จากน้อยไปมาก
+      } else {
+        return b.progress - a.progress;
+      }
+    });
+    
+    // จำกัดจำนวนโปรเจกต์ที่แสดง
+    return displayCount === 'all' ? sorted : sorted.slice(0, displayCount);
+  };
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Project Timeline</h1>
         <Button 
           onClick={() => setIsAddingNew(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-purple-600 hover:bg-purple-700"
         >
-          <Plus className="w-4 h-4 mr-2" /> Add Project
+          <Plus className="mr-2 h-4 w-4" /> Add Project
         </Button>
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div className="w-full md:w-auto">
-          <Select value={activeYear} onValueChange={setActiveYear}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="Select Year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="2027">2027</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full md:w-auto">
-          <Select 
-            value={sortBy} 
-            onValueChange={(value) => setSortBy(value as 'deadline' | 'progress')}
-          >
-            <SelectTrigger className="w-full md:w-60">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="deadline">Sort by deadline</SelectItem>
-              <SelectItem value="progress">Sort by progress</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex-1 min-w-[200px]">
-          <Input 
-            placeholder="Search projects..." 
-            className="w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <Tabs defaultValue="2025" className="w-full">
+      
+      <Tabs defaultValue="2025">
         <div className="flex justify-between items-center mb-4">
           <TabsList>
             <TabsTrigger value="2025">2025</TabsTrigger>
@@ -411,174 +341,185 @@ export default function ProjectTimeline() {
             <TabsTrigger value="2027">2027</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center space-x-2">
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                <SelectItem value="onTime">On Time</SelectItem>
-                <SelectItem value="nearDeadline">Near Deadline</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Sort by:</span>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'deadline' | 'progress')}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="deadline">Deadline</SelectItem>
+                  <SelectItem value="progress">Progress</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search projects..."
-                className="pl-8"
-              />
-              <svg
-                className="absolute left-2 top-2.5 h-4 w-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Display:</span>
+              <Select 
+                value={displayCount.toString()} 
+                onValueChange={(value) => setDisplayCount(value === 'all' ? 'all' : parseInt(value))}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Display count" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">Top 3</SelectItem>
+                  <SelectItem value="5">Top 5</SelectItem>
+                  <SelectItem value="10">Top 10</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Input 
+                placeholder="Search projects..." 
+                className="w-[200px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </div>
         
         <TabsContent value="2025" className="mt-4">
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Projects</TableHead>
-                  <TableHead className="w-[200px]">Key persons</TableHead>
-                  <TableHead className="w-[150px]">Progress</TableHead>
-                  <TableHead className="w-[150px]">Deadline</TableHead>
-                  <TableHead colSpan={12} className="text-center">
-                    {activeYear}
-                  </TableHead>
-                </TableRow>
-                <TableRow>
-                  <TableHead colSpan={4}></TableHead>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <TableHead key={i} className="text-center">{i + 1}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getSortedProjects().map((project) => (
-                  <Sheet key={project.id}>
-                    <SheetTrigger asChild>
-                      <TableRow 
-                        className={`${getRowBackground(project.name)} cursor-pointer hover:bg-gray-50`}
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <TableCell className="font-medium">{project.name}</TableCell>
-                        <TableCell>{project.keyPersons || ""}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress 
-                              value={project.progress} 
-                              className="h-2"
-                              indicatorClassName={getProgressColor(project.progress)}
-                            />
-                            <span className="text-xs">{project.progress}%</span>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+            </div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500">{error}</div>
+          ) : filteredProjects.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">No projects found</div>
+          ) : (
+            <div className="space-y-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[250px]">Projects</TableHead>
+                    <TableHead className="w-[200px]">Key persons</TableHead>
+                    <TableHead className="w-[200px]">Progress</TableHead>
+                    <TableHead className="w-[150px]">Deadline</TableHead>
+                    {/* Month columns with equal width */}
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <TableHead key={i} className="p-1 text-center w-[40px]">
+                        {i + 1}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getSortedProjects().map((project) => (
+                    <TableRow 
+                      key={project.id} 
+                      className={`cursor-pointer ${getRowBackground(project.name)}`}
+                      onClick={() => setSelectedProject(project)}
+                    >
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>{project.keyPersons || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-[100px] bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className={`h-2.5 rounded-full ${getProgressColor(project.progress)}`} 
+                              style={{ width: `${project.progress}%` }}
+                            ></div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            {project.deadline}
-                            <div className="text-xs text-gray-500">
-                              {project.daysRemaining > 0 
-                                ? `${project.daysRemaining} days remaining`
-                                : `${Math.abs(project.daysRemaining)} days overdue`
-                              }
-                            </div>
-                          </div>
-                        </TableCell>
-                        {/* สร้างเซลล์สำหรับแต่ละเดือน */}
-                        {Array.from({ length: 12 }, (_, i) => {
-                          // ดึงเดือนจาก deadline
-                          const deadlineMonth = getDeadlineMonth(project.deadline);
-                          
-                          // แสดง progress bar ในเดือนที่ตรงกับ deadline
-                          const isDeadlineMonth = i === deadlineMonth;
-                          
-                          return (
-                            <TableCell key={i} className="p-1 text-center">
-                              {isDeadlineMonth && (
-                                <div className="flex flex-col items-center">
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                                    <div 
-                                      className={`h-2 rounded-full ${getProgressColor(project.progress)}`} 
-                                      style={{ width: `${project.progress}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs">{project.progress}%</span>
+                          <span className="text-sm">{project.progress}%</span>
+                          {/* Add status badge next to progress */}
+                          <Badge variant="outline" className={`ml-2 ${getStatusColor(project.status)}`}>
+                            {getStatusText(project.status)}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{project.deadline}</div>
+                          <div className="text-sm text-gray-500">{project.daysRemaining} days remaining</div>
+                        </div>
+                      </TableCell>
+                      
+                      {/* Month columns with equal width */}
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const deadlineMonth = getDeadlineMonth(project.deadline);
+                        const isDeadlineMonth = i === deadlineMonth;
+                        
+                        return (
+                          <TableCell key={i} className="p-1 text-center w-[40px]">
+                            {isDeadlineMonth && (
+                              <div className="flex flex-col items-center">
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                                  <div 
+                                    className={`h-2 rounded-full ${getProgressColor(project.progress)}`} 
+                                    style={{ width: `${project.progress}%` }}
+                                  ></div>
                                 </div>
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    </SheetTrigger>
-                    <SheetContent side="right">
-                      <SheetHeader>
-                        <SheetTitle>Edit Project</SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-6">
-                        <ProjectForm project={project} onSave={handleSave} />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="mt-6 flex flex-col md:flex-row gap-6">
-            <div>
-              <h3 className="text-sm font-semibold mb-2">Progress Legend:</h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-sm bg-red-500"></div>
-                  <span className="text-sm">0-24%</span>
+                                <span className="text-xs">{project.progress}%</span>
+                              </div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {/* แสดงปุ่ม "Show All" เมื่อไม่ได้แสดงทั้งหมด */}
+              {displayCount !== 'all' && filteredProjects.length > displayCount && (
+                <div className="flex justify-center mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setDisplayCount('all')}
+                  >
+                    Show All ({filteredProjects.length} projects)
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-sm bg-yellow-500"></div>
-                  <span className="text-sm">25-49%</span>
+              )}
+              
+              <div className="flex justify-between items-start mt-8 text-sm">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Progress Color Legend:</h3>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-red-500"></div>
+                      <span className="text-sm">0-24%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-yellow-500"></div>
+                      <span className="text-sm">25-49%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-blue-500"></div>
+                      <span className="text-sm">50-79%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-green-500"></div>
+                      <span className="text-sm">80-100%</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-sm bg-blue-500"></div>
-                  <span className="text-sm">50-79%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-sm bg-green-500"></div>
-                  <span className="text-sm">80-100%</span>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Deadline Status:</h3>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
+                        Overdue
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                        Near Deadline (within 14 days)
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-semibold mb-2">Deadline Status:</h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                    Overdue
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                    Near Deadline (within 14 days)
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </TabsContent>
         
         <TabsContent value="2026" className="mt-4">
@@ -611,15 +552,144 @@ export default function ProjectTimeline() {
                   daysRemaining: 0,
                   status: 'onTime'
                 }}
-                onSave={(newProject) => {
-                  setProjects(prev => [...prev, newProject]);
-                  setIsAddingNew(false);
-                }}
+                onSave={handleAddProject}
+                isSaving={isSaving}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {/* Edit Project Sheet */}
+      {selectedProject && (
+        <Sheet open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+          <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle>Edit Project</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <ProjectForm
+                project={selectedProject}
+                onSave={handleSave}
+                isSaving={isSaving}
               />
             </div>
           </SheetContent>
         </Sheet>
       )}
     </div>
+  );
+}
+
+// Component for project form
+function ProjectForm({ 
+  project, 
+  onSave, 
+  isSaving = false 
+}: { 
+  project: Project, 
+  onSave: (project: Project) => void,
+  isSaving?: boolean
+}) {
+  const [formData, setFormData] = useState(project);
+  const [deadlineDate, setDeadlineDate] = useState<Date | null>(
+    project.deadline ? new Date(project.deadline) : null
+  );
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Calculate days remaining
+    const today = new Date();
+    const deadline = deadlineDate || today;
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Determine the status based on conditions
+    let projectStatus: 'onTime' | 'nearDeadline' | 'overdue' | 'completed';
+    
+    if (formData.progress >= 100) {
+      projectStatus = 'completed';
+    } else if (diffDays < 0) {
+      projectStatus = 'overdue';
+    } else if (diffDays <= 14) {
+      projectStatus = 'nearDeadline';
+    } else {
+      projectStatus = 'onTime';
+    }
+    
+    const updatedProject = {
+      ...formData,
+      deadline: deadlineDate ? deadlineDate.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }) : '',
+      daysRemaining: diffDays,
+      status: projectStatus
+    };
+    
+    onSave(updatedProject);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Project Name</label>
+        <Input 
+          value={formData.name} 
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          required
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Key Persons</label>
+        <Input 
+          value={formData.keyPersons || ''} 
+          onChange={(e) => setFormData({...formData, keyPersons: e.target.value})}
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Progress (%)</label>
+        <Input 
+          type="number" 
+          min="0"
+          max="100"
+          value={formData.progress} 
+          onChange={(e) => setFormData({...formData, progress: parseInt(e.target.value)})}
+          required
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Deadline</label>
+        <DatePicker
+          selected={deadlineDate}
+          onChange={(date) => setDeadlineDate(date)}
+          dateFormat="dd MMM yyyy"
+          className="w-full p-2 border rounded"
+          required
+        />
+      </div>
+      
+      <div className="pt-4">
+        <Button 
+          type="submit" 
+          className="w-full bg-purple-600 hover:bg-purple-700"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+              Saving...
+            </>
+          ) : (
+            'Save Project'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 } 
