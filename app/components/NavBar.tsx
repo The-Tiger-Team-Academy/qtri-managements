@@ -16,7 +16,7 @@ export default function NavBar() {
       <div className="flex items-center justify-between h-full px-6">
         {/* Left side - Breadcrumb or page title */}
         <div>
-          <h1 className="text-lg font-semibold text-gray-700">Dashboard</h1>
+          <h1 className="text-lg font-semibold text-gray-700">Quantum Technology Research Initiative</h1>
         </div>
 
         {/* Right side - Icons and Profile */}

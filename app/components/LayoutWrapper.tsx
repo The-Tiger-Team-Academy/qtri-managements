@@ -33,31 +33,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   // ตรวจสอบว่าควรแสดงพื้นหลัง animation หรือไม่
   useEffect(() => {
-    // กำหนดหน้าที่ต้องการให้มีพื้นหลังสีขาว (ไม่แสดง animation)
-    const whiteBackgroundPages = [
-      '/dashboard',
-      '/projects',
-      '/workflow',
-      '/hr-management',
-      '/hr-management/salary',
-      '/workload',
-      '/schedule',
-      '/stakeholder',
-      '/finance',
-      '/flow',
-      '/genbi',
-      '/chat',
-      '/account-management',
-      '/project-timeline'
-    ];
-    
-    // ตรวจสอบว่าหน้าปัจจุบันควรมีพื้นหลังสีขาวหรือไม่
-    const shouldHaveWhiteBackground = whiteBackgroundPages.some(page => 
-      pathname.startsWith(page)
-    );
-    
-    // ตั้งค่าการแสดง background animation (true = แสดง, false = ไม่แสดง)
-    setShowBackground(!shouldHaveWhiteBackground);
+    // แสดง animation เฉพาะหน้า login เท่านั้น
+    const shouldShow = pathname === '/';
+    console.log('pathname:', pathname, 'shouldShow:', shouldShow);
+    setShowBackground(shouldShow);
   }, [pathname]);
 
   return (
@@ -71,7 +50,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <NavBar />
         </>
       )}
-      <main className={`${!isLoginPage ? 'ml-64 pt-16' : ''}`}>
+      <main className={`${!isLoginPage ? 'ml-60 pt-20' : ''} ${isLoginPage ? 'bg-transparent' : 'bg-white'}`}>
         {children}
       </main>
     </div>

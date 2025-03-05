@@ -7,6 +7,7 @@ export default function QuantumBackground() {
   const animationIdRef = useRef<number | null>(null);
 
   useEffect(() => {
+    console.log('QuantumBackground mounted');
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -133,6 +134,7 @@ export default function QuantumBackground() {
     <canvas 
       ref={canvasRef}
       className="fixed top-0 left-0 w-full h-full -z-10"
+      style={{ backgroundColor: '#0a0a1e' }}
       aria-hidden="true"
     />
   );
