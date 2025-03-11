@@ -1,13 +1,12 @@
 import { FaChartBar, FaUsers, FaDollarSign, FaCalendarAlt } from 'react-icons/fa'
 import { Widget } from '../types'
 
-export const initialWidgets: Widget[] = [
-  { 
-    id: '1', 
-    title: 'Revenue Overview', 
+const initialWidgets: Widget[] = [
+  {
+    id: '1',
     type: 'chart',
     x: 0, y: 0, w: 6, h: 4,
-    content: <FaChartBar className="w-12 h-12 text-blue-500" />
+    content: 'Chart Bar'
   },
   { 
     id: '2', 
@@ -31,3 +30,5 @@ export const initialWidgets: Widget[] = [
     content: <FaCalendarAlt className="w-12 h-12 text-orange-500" />
   }
 ] 
+
+export default initialWidgets; 

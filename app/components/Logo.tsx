@@ -1,11 +1,11 @@
 import Image from 'next/image'
-
+import qtric from '../qtric.svg'
 export default function Logo() {
   return (
     <div className="flex justify-center items-center w-full">
       <Image 
-        src="/images/qtric.png"
-        alt="Tiger Team Academy Logo"
+        src={qtric}
+        alt="QTRIC Logo"
         width={100}
         height={100}
         className="rounded"

@@ -21,6 +21,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 // Project data type
 interface Project {
   id: string;
@@ -51,7 +52,7 @@ export default function ProjectTimeline() {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:3000/api/projects');
+        const response = await axios.get(`${baseUrl}/api/projects`);
         
         // แปลงข้อมูลจาก API ให้ตรงกับ interface Project
         const formattedProjects = response.data.map((project: any) => ({
@@ -96,7 +97,7 @@ export default function ProjectTimeline() {
       };
       
       // Send data to API using the format from the curl example
-      const response = await axios.post('http://localhost:3000/api/projects', projectToAdd);
+      const response = await axios.post(`${baseUrl}/api/projects`, projectToAdd);
       
       console.log('Project added:', response.data);
 
@@ -126,7 +127,7 @@ export default function ProjectTimeline() {
       };
       
       // ส่งข้อมูลไปยัง API
-      const response = await axios.put(`http://localhost:3000/api/projects/${project.id}`, projectToUpdate);
+      const response = await axios.put(`${baseUrl}/api/projects/${project.id}`, projectToUpdate);
       
       // อัพเดตรายการโปรเจกต์
       setProjects(prev => prev.map(p => p.id === project.id ? response.data : p));
@@ -248,7 +249,7 @@ export default function ProjectTimeline() {
       setIsSaving(true);
       
       // Send delete request to API
-      await axios.delete(`http://localhost:3000/api/projects/${projectId}`);
+      await axios.delete(`${baseUrl}/api/projects/${projectId}`);
       
       // Remove project from state
       setProjects(prev => prev.filter(p => p.id !== projectId));

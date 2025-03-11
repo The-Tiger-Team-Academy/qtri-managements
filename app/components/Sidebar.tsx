@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { FaHome, FaCalendarAlt, FaProjectDiagram, FaUsers, FaBook, FaCog } from 'react-icons/fa'
-
+import qtric from '../public/qtric.svg'
 export default function Sidebar() {
   const pathname = usePathname()
 
@@ -22,7 +22,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="flex items-center justify-center h-16 border-b">
         <Image
-          src="/images/qtric.png"
+          src={qtric}
           alt="Logo"
           width={40}
           height={40}

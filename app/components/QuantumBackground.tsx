@@ -2,6 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 
+interface Particle {
+  x: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  color: string;
+}
+
 export default function QuantumBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number | null>(null);
@@ -19,7 +28,7 @@ export default function QuantumBackground() {
     canvas.height = window.innerHeight;
     
     // ตั้งค่าพารามิเตอร์
-    const particles: any[] = [];
+    const particles: Particle[] = [];
     const particleCount = 150;
     const connectionRadius = 150;
     const particleSpeed = 1.5;
@@ -31,35 +40,75 @@ export default function QuantumBackground() {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        dx: (Math.random() - 0.5) * particleSpeed,
-        dy: (Math.random() - 0.5) * particleSpeed,
+        size: Math.random() * 2 + 1,
+        speedX: (Math.random() - 0.5) * particleSpeed,
+        speedY: (Math.random() - 0.5) * particleSpeed,
         color: `hsla(${Math.random() * 60 + 220}, 80%, 60%, 0.8)` // Cosmic blue theme
       });
     }
     
     // ฟังก์ชันวาดเส้นเชื่อมต่อ
     function drawConnections() {
+      if (!ctx) return;
       ctx.beginPath();
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const p1 = particles[i];
           const p2 = particles[j];
-          const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          const distance = Math.sqrt(
+            Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)
+          );
           
           if (distance < connectionRadius) {
             const opacity = 1 - (distance / connectionRadius);
             ctx.strokeStyle = `rgba(100, 200, 255, ${opacity * 0.3})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
           }
         }
       }
-      ctx.stroke();
     }
     
-    // ฟังก์ชัน animation
+    // ฟังก์ชันวาดอนุภาค
+    function drawParticles() {
+      if (!ctx) return;
+      for (const particle of particles) {
+        ctx.beginPath();
+        ctx.fillStyle = particle.color;
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = particle.color;
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+    
+    // ฟังก์ชันอัปเดตตำแหน่งอนุภาค
+    function updateParticles() {
+      if (!ctx || !canvas) return;
+      for (const particle of particles) {
+        // อัปเดตตำแหน่ง
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+        
+        // สะท้อนเมื่อชนขอบ
+        if (particle.x < 0 || particle.x > canvas.width) {
+          particle.speedX *= -1;
+          particle.x = Math.max(0, Math.min(canvas.width, particle.x));
+        }
+        if (particle.y < 0 || particle.y > canvas.height) {
+          particle.speedY *= -1;
+          particle.y = Math.max(0, Math.min(canvas.height, particle.y));
+        }
+      }
+    }
+    
+    // ฟังก์ชันวาดเฟรม
     function animate() {
+      if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // พื้นหลังแบบเฟด
@@ -83,16 +132,16 @@ export default function QuantumBackground() {
         particle.color = `hsla(${hue}, 70%, 60%, 0.8)`;
         
         // อัปเดตตำแหน่ง
-        particle.x += particle.dx;
-        particle.y += particle.dy;
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
         
         // สะท้อนเมื่อชนขอบ
         if (particle.x < 0 || particle.x > canvas.width) {
-          particle.dx *= -1;
+          particle.speedX *= -1;
           particle.x = Math.max(0, Math.min(canvas.width, particle.x));
         }
         if (particle.y < 0 || particle.y > canvas.height) {
-          particle.dy *= -1;
+          particle.speedY *= -1;
           particle.y = Math.max(0, Math.min(canvas.height, particle.y));
         }
         
@@ -101,7 +150,7 @@ export default function QuantumBackground() {
         ctx.fillStyle = particle.color;
         ctx.shadowBlur = glowIntensity;
         ctx.shadowColor = particle.color;
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -115,6 +164,7 @@ export default function QuantumBackground() {
     
     // ปรับขนาด canvas เมื่อขนาดหน้าจอเปลี่ยน
     const handleResize = () => {
+      if (!canvas) return;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };

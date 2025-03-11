@@ -1,22 +1,16 @@
 'use client'
-import { useAuth } from '../contexts/AuthContext'
+// ลบการ import useAuth
+// import { useAuth } from '../contexts/AuthContext'
 
 interface PermissionGateProps {
   permission: string
   children: React.ReactNode
-  fallback?: React.ReactNode
 }
 
-export default function PermissionGate({ 
-  permission, 
-  children, 
-  fallback = null 
-}: PermissionGateProps) {
-  const { hasPermission } = useAuth()
-
-  if (!hasPermission(permission)) {
-    return fallback
-  }
-
+export default function PermissionGate({ permission, children }: PermissionGateProps) {
+  // ลบการใช้งาน useAuth
+  // const { checkPermission, isLoading } = useAuth()
+  
+  // แสดงเนื้อหาเสมอโดยไม่มีการตรวจสอบสิทธิ์
   return <>{children}</>
 } 

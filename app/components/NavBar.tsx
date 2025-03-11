@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { FaBell, FaUserCircle, FaSignOutAlt } from 'react-icons/fa'
-
+import qtric from '../../public/qtric.svg'
 export default function NavBar() {
   const router = useRouter()
 
@@ -30,7 +30,7 @@ export default function NavBar() {
           {/* Profile */}
           <div className="flex items-center space-x-3">
             <Image
-              src="/images/qtric.png"
+              src={qtric}
               alt="Profile"
               width={32}
               height={32}

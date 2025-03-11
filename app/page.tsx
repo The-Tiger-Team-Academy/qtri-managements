@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import QuantumBackground from './components/QuantumBackground'
-
+import qtric from '../public/qtric.svg'
 export default function LoginPage() {
   const router = useRouter()
   const [credentials, setCredentials] = useState({
@@ -25,7 +25,7 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Image
-                src="/images/qtric.png"
+                src={qtric}
                 alt="QUANTUM TECHNOLOGY RESEARCH INITIATIVE Logo"
                 width={200}
                 height={200}
