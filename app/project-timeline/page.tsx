@@ -54,6 +54,7 @@ export default function ProjectTimeline() {
         setLoading(true);
         const response = await axios.get(`${baseUrl}/api/projects`);
         
+        console.log(response.data);
         // แปลงข้อมูลจาก API ให้ตรงกับ interface Project
         const formattedProjects = response.data.map((project: any) => ({
           id: project.id,

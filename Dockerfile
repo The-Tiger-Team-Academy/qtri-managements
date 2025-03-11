@@ -30,7 +30,7 @@ FROM --platform=linux/amd64 nginx:alpine
 # Copy the static files from builder stage
 COPY --from=builder /app/out /usr/share/nginx/html
 
-
+COPY .env .env
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
