@@ -154,8 +154,24 @@ const menuItems: MenuItem[] = [
   // Settings
   {
     name: 'Settings',
-    path: '/account-management',
-    icon: <FaUserCog className="w-5 h-5" />
+    icon: <FaUserCog className="w-5 h-5" />,
+    children: [
+      {
+        name: 'Account Management',
+        path: '/account-management',
+        icon: <FaUserCog className="w-4 h-4" />
+      },
+      {
+        name: 'Management Features',
+        path: '/management-features',
+        icon: <FaCog className="w-4 h-4" />
+      },
+      {
+        name: 'Page Settings',
+        path: '/page-settings',
+        icon: <FaCog className="w-4 h-4" />
+      }
+    ]
   }
 ]
 
