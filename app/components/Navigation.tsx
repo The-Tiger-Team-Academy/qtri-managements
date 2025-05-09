@@ -14,7 +14,8 @@ import {
   FaDollarSign,
   FaChevronDown,
   FaChevronRight,
-  FaUserCog
+  FaUserCog,
+  FaExchangeAlt
 } from 'react-icons/fa'
 import { 
   CalendarDays, 
@@ -170,6 +171,11 @@ const menuItems: MenuItem[] = [
         name: 'Page Settings',
         path: '/page-settings',
         icon: <FaCog className="w-4 h-4" />
+      },
+      {
+        name: 'MCP Integration',
+        path: '/mcp-integration',
+        icon: <FaExchangeAlt className="w-4 h-4" />
       }
     ]
   }

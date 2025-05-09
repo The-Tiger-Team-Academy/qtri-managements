@@ -1,8 +1,9 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { GridStack, GridStackNode } from 'gridstack'
+import { useEffect, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { GridStack } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css'
-import { FaChartBar, FaUsers, FaDollarSign, FaCalendarAlt, FaCog, FaPlus } from 'react-icons/fa'
+import { FaChartBar, FaUsers, FaList, FaCalendarAlt, FaCog, FaPlus, FaGripVertical, FaArrowUp } from 'react-icons/fa'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,6 +12,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  PointElement,
+  LineElement,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
@@ -19,6 +22,8 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
@@ -28,207 +33,369 @@ interface Widget extends Omit<GridStackNode, 'content'> {
   id: string
   title: string
   type: string
-  content?: string
+  data?: any
 }
 
-const data = {
-  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+const revenueData = {
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
   datasets: [
     {
-      label: 'Revenue',
-      data: [65, 59, 80, 81, 56, 55, 40],
-      backgroundColor: 'rgba(75, 192, 192, 0.6)',
-      borderColor: 'rgba(75, 192, 192, 1)',
-      borderWidth: 1,
-    },
-  ],
+      label: 'Revenue (Million Baht)',
+      data: [12.5, 15.8, 14.2, 16.5, 18.2, 19.5],
+      backgroundColor: 'rgba(59, 130, 246, 0.5)',
+      borderColor: 'rgb(59, 130, 246)',
+      borderWidth: 2,
+    }
+  ]
+};
+
+const userStatsData = {
+  totalUsers: 1250,
+  activeUsers: 890,
+  newUsers: 45,
+  growth: 12.5
+};
+
+const recentActivities = [
+  { id: 1, user: 'Dr. Smith', action: 'Started new quantum experiment', time: '2 hours ago' },
+  { id: 2, user: 'Lab Team A', action: 'Updated research data', time: '4 hours ago' },
+  { id: 3, user: 'System', action: 'Backup completed', time: '5 hours ago' },
+  { id: 4, user: 'Dr. Johnson', action: 'Published new findings', time: '1 day ago' },
+];
+
+const calendarEvents = [
+  { id: 1, title: 'Team Meeting', date: '2024-02-20', type: 'meeting' },
+  { id: 2, title: 'Experiment #245', date: '2024-02-21', type: 'experiment' },
+  { id: 3, title: 'Data Review', date: '2024-02-22', type: 'review' },
+];
+
+const WidgetContent = ({ widget }: { widget: Widget }) => {
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: widget.title
+      }
+    }
+  };
+
+  const renderWidgetContent = () => {
+    switch (widget.type) {
+      case 'chart':
+        return (
+          <div className="h-[calc(100%-4rem)]">
+            <Bar data={revenueData} options={options} />
+          </div>
+        );
+      case 'stats':
+        return (
+          <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-blue-600">{userStatsData.totalUsers}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Active Users</p>
+              <p className="text-2xl font-bold text-green-600">{userStatsData.activeUsers}</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">New Users</p>
+              <p className="text-2xl font-bold text-purple-600">{userStatsData.newUsers}</p>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Growth</p>
+              <div className="flex items-center">
+                <p className="text-2xl font-bold text-orange-600">{userStatsData.growth}%</p>
+                <FaArrowUp className="ml-2 text-green-500" />
+              </div>
+            </div>
+          </div>
+        );
+      case 'list':
+        return (
+          <div className="overflow-auto h-[calc(100%-4rem)]">
+            {recentActivities.map(activity => (
+              <div key={activity.id} className="flex items-center p-3 border-b hover:bg-gray-50">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{activity.user}</p>
+                  <p className="text-sm text-gray-600">{activity.action}</p>
+                </div>
+                <span className="text-xs text-gray-500">{activity.time}</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'calendar':
+        return (
+          <div className="overflow-auto h-[calc(100%-4rem)]">
+            {calendarEvents.map(event => (
+              <div key={event.id} className="flex items-center p-3 border-b hover:bg-gray-50">
+                <div className={`w-2 h-2 rounded-full mr-3 ${
+                  event.type === 'meeting' ? 'bg-blue-500' :
+                  event.type === 'experiment' ? 'bg-green-500' : 'bg-purple-500'
+                }`} />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{event.title}</p>
+                  <p className="text-sm text-gray-600">{event.date}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="widget-content h-full bg-white rounded-lg shadow-sm p-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <div className="grid-stack-item-handle cursor-move mr-2 text-gray-400 hover:text-gray-600">
+            <FaGripVertical />
+          </div>
+          <h3 className="font-semibold text-gray-700">{widget.title}</h3>
+        </div>
+      </div>
+      {renderWidgetContent()}
+    </div>
+  );
 };
 
 export default function DashboardPage() {
   const gridRef = useRef<GridStack>()
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const initialWidgets: Widget[] = [
-    { 
-      id: '1', 
-      title: 'Revenue Overview', 
-      type: 'chart',
-      x: 0, y: 0, w: 6, h: 4
-    },
-    { 
-      id: '2', 
-      title: 'User Statistics', 
-      type: 'stats',
-      x: 6, y: 0, w: 3, h: 4
-    },
-    { 
-      id: '3', 
-      title: 'Recent Activities', 
-      type: 'list',
-      x: 0, y: 4, w: 6, h: 4
-    },
-    { 
-      id: '4', 
-      title: 'Calendar', 
-      type: 'calendar',
-      x: 6, y: 4, w: 6, h: 4
-    }
-  ]
+  const [isEditMode, setIsEditMode] = useState(false)
 
   useEffect(() => {
-    if (!containerRef.current) return
+    const initGrid = () => {
+      if (!containerRef.current) return;
 
-    const grid = GridStack.init({
-      column: 12,
-      row: 12,
-      cellHeight: 60,
-      animate: true,
-      draggable: {
-        handle: '.grid-stack-item-handle'
-      },
-      resizable: {
-        handles: 'e,se,s,sw,w'
+      // Clear existing content and grid
+      if (gridRef.current) {
+        gridRef.current.removeAll();
+        gridRef.current.destroy(false); // false = don't remove DOM elements
+        gridRef.current = undefined;
       }
-    }, containerRef.current)
+      containerRef.current.innerHTML = '';
 
-    gridRef.current = grid
+      // Create widget elements
+      const widgets = [
+        { id: 'revenue', title: 'Revenue Overview', type: 'chart', x: 0, y: 0, w: 8, h: 4 },
+        { id: 'stats', title: 'User Statistics', type: 'stats', x: 8, y: 0, w: 4, h: 4 },
+        { id: 'activities', title: 'Recent Activities', type: 'list', x: 0, y: 4, w: 6, h: 4 },
+        { id: 'calendar', title: 'Calendar', type: 'calendar', x: 6, y: 4, w: 6, h: 4 }
+      ];
 
-    // Add initial widgets
-    initialWidgets.forEach(widget => {
-      grid.addWidget({
-        ...widget,
-        content: generateWidgetHTML(widget)
-      })
-    })
+      // Create grid container if needed
+      const gridContainer = document.createElement('div');
+      gridContainer.className = 'grid-stack';
+      containerRef.current.appendChild(gridContainer);
 
-    // Initialize charts after widgets are added
-    setTimeout(() => {
-      const chartContainer = document.getElementById(`chart-${initialWidgets[0].id}`)
-      if (chartContainer) {
-        const canvas = document.createElement('canvas')
-        chartContainer.appendChild(canvas)
-        
-        new ChartJS(canvas, {
-          type: 'bar',
-          data: data,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-              },
-              title: {
-                display: true,
-                text: 'Monthly Revenue'
-              }
-            }
-          }
-        })
-      }
-    }, 100)
+      // Add widgets to container
+      widgets.forEach(widget => {
+        const widgetEl = document.createElement('div');
+        widgetEl.className = 'grid-stack-item';
+        widgetEl.setAttribute('gs-x', widget.x.toString());
+        widgetEl.setAttribute('gs-y', widget.y.toString());
+        widgetEl.setAttribute('gs-w', widget.w.toString());
+        widgetEl.setAttribute('gs-h', widget.h.toString());
 
+        const content = document.createElement('div');
+        content.className = 'grid-stack-item-content';
+        content.id = widget.id;
+        widgetEl.appendChild(content);
+        gridContainer.appendChild(widgetEl);
+      });
+
+      // Initialize GridStack
+      gridRef.current = GridStack.init({
+        column: 12,
+        row: 12,
+        cellHeight: 100,
+        margin: 16,
+        animate: true,
+        draggable: {
+          handle: '.grid-stack-item-handle'
+        },
+        resizable: {
+          handles: 'e,se,s,sw,w'
+        },
+        float: true,
+        staticGrid: !isEditMode,
+      }, gridContainer);
+
+      // Render widget contents
+      renderWidgetContents();
+    };
+
+    initGrid();
+
+    // Cleanup function
     return () => {
-      // grid.destroy()
-    }
-  }, [])
+      if (gridRef.current && containerRef.current) {
+        try {
+          // Remove all widgets first
+          gridRef.current.removeAll();
+          // Destroy grid without removing DOM elements
+          gridRef.current.destroy(false);
+        } catch (error) {
+          console.log('Grid cleanup error:', error);
+        }
+        // Clear the container
+        containerRef.current.innerHTML = '';
+        gridRef.current = undefined;
+      }
+    };
+  }, [isEditMode]);
 
-  const getWidgetIcon = (type: string): string => {
-    switch (type) {
-      case 'chart':
-        return `<div class="bg-blue-100 p-4 rounded-full">
-                  <i class="fas fa-chart-bar text-blue-500 text-2xl"></i>
-                </div>`
-      case 'stats':
-        return `<div class="bg-green-100 p-4 rounded-full">
-                  <i class="fas fa-users text-green-500 text-2xl"></i>
-                </div>`
-      case 'list':
-        return `<div class="bg-purple-100 p-4 rounded-full">
-                  <i class="fas fa-list text-purple-500 text-2xl"></i>
-                </div>`
-      case 'calendar':
-        return `<div class="bg-orange-100 p-4 rounded-full">
-                  <i class="fas fa-calendar text-orange-500 text-2xl"></i>
-                </div>`
-      default:
-        return ''
-    }
-  }
-
-  const generateWidgetHTML = (widget: Widget): string => {
-    const widgetContent = widget.type === 'chart' 
-      ? `<div id="chart-${widget.id}" class="h-full"></div>`
-      : `<div class="flex items-center justify-center h-[calc(100%-2rem)] bg-gray-50 rounded">
-          ${getWidgetIcon(widget.type)}
-         </div>`
-
-    return `
-      <div class="widget-content h-full bg-white rounded-lg shadow-sm p-4">
-        <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center">
-            <div class="grid-stack-item-handle cursor-move mr-2 text-gray-400 hover:text-gray-600">
-              <i class="fas fa-grip-vertical"></i>
+  const renderWidgetContents = () => {
+    // Revenue Chart
+    const revenueWidget = document.getElementById('revenue')
+    if (revenueWidget) {
+      const root = createRoot(revenueWidget)
+      root.render(
+        <div className="h-full p-4">
+          <div className="flex items-center mb-4">
+            <div className="grid-stack-item-handle cursor-move mr-2 text-gray-400">
+              <FaGripVertical />
             </div>
-            <h3 class="font-semibold text-gray-700">${widget.title}</h3>
+            <h3 className="font-semibold text-gray-700">Revenue Overview</h3>
+          </div>
+          <div className="h-[calc(100%-4rem)]">
+            <Bar data={revenueData} options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'top' },
+              }
+            }} />
           </div>
         </div>
-        ${widgetContent}
-      </div>
-    `
-  }
-
-  const addWidget = () => {
-    const newWidget: Widget = {
-      id: `widget-${Date.now()}`,
-      title: 'New Widget',
-      type: 'stats',
-      x: 0,
-      y: 0,
-      w: 3,
-      h: 4
+      )
     }
 
-    gridRef.current?.addWidget({
-      ...newWidget,
-      content: generateWidgetHTML(newWidget)
-    })
+    // User Stats
+    const statsWidget = document.getElementById('stats')
+    if (statsWidget) {
+      const root = createRoot(statsWidget)
+      root.render(
+        <div className="h-full p-4">
+          <div className="flex items-center mb-4">
+            <div className="grid-stack-item-handle cursor-move mr-2 text-gray-400">
+              <FaGripVertical />
+            </div>
+            <h3 className="font-semibold text-gray-700">User Statistics</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-blue-600">{userStatsData.totalUsers}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Active Users</p>
+              <p className="text-2xl font-bold text-green-600">{userStatsData.activeUsers}</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">New Users</p>
+              <p className="text-2xl font-bold text-purple-600">{userStatsData.newUsers}</p>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Growth</p>
+              <div className="flex items-center">
+                <p className="text-2xl font-bold text-orange-600">{userStatsData.growth}%</p>
+                <FaArrowUp className="ml-2 text-green-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Recent Activities
+    const activitiesWidget = document.getElementById('activities')
+    if (activitiesWidget) {
+      const root = createRoot(activitiesWidget)
+      root.render(
+        <div className="h-full p-4">
+          <div className="flex items-center mb-4">
+            <div className="grid-stack-item-handle cursor-move mr-2 text-gray-400">
+              <FaGripVertical />
+            </div>
+            <h3 className="font-semibold text-gray-700">Recent Activities</h3>
+          </div>
+          <div className="overflow-auto h-[calc(100%-4rem)]">
+            {recentActivities.map(activity => (
+              <div key={activity.id} className="flex items-center p-3 border-b hover:bg-gray-50">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{activity.user}</p>
+                  <p className="text-sm text-gray-600">{activity.action}</p>
+                </div>
+                <span className="text-xs text-gray-500">{activity.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    // Calendar
+    const calendarWidget = document.getElementById('calendar')
+    if (calendarWidget) {
+      const root = createRoot(calendarWidget)
+      root.render(
+        <div className="h-full p-4">
+          <div className="flex items-center mb-4">
+            <div className="grid-stack-item-handle cursor-move mr-2 text-gray-400">
+              <FaGripVertical />
+            </div>
+            <h3 className="font-semibold text-gray-700">Calendar</h3>
+          </div>
+          <div className="overflow-auto h-[calc(100%-4rem)]">
+            {calendarEvents.map(event => (
+              <div key={event.id} className="flex items-center p-3 border-b hover:bg-gray-50">
+                <div className={`w-2 h-2 rounded-full mr-3 ${
+                  event.type === 'meeting' ? 'bg-blue-500' :
+                  event.type === 'experiment' ? 'bg-green-500' : 'bg-purple-500'
+                }`} />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{event.title}</p>
+                  <p className="text-sm text-gray-600">{event.date}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
   }
 
   const toggleEditMode = () => {
-    if (gridRef.current) {
-      const isMovable = gridRef.current.opts.draggable?.handle === '.grid-stack-item-handle'
-      gridRef.current.setStatic(!isMovable)
-    }
+    setIsEditMode(!isEditMode)
   }
 
   return (
-    <div className="p-6" style={{ backgroundColor: 'white', minHeight: '100vh' }}>
-      {/* Header */}
+    <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <div className="space-x-2">
-          <button
-            onClick={addWidget}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
-          >
-            <FaPlus className="mr-2" />
-            Add Widget
-          </button>
-          <button
-            onClick={toggleEditMode}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-          >
-            <FaCog className="mr-2" />
-            Toggle Edit Mode
-          </button>
-        </div>
+        <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
+        <button
+          onClick={toggleEditMode}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center shadow-sm"
+        >
+          <FaCog className="mr-2" />
+          {isEditMode ? 'Save Layout' : 'Edit Layout'}
+        </button>
       </div>
 
-      {/* Grid Container */}
       <div 
-        ref={containerRef} 
-        className="grid-stack bg-gray-100 rounded-lg p-4 min-h-[600px]"
+        ref={containerRef}
+        className="grid-stack bg-white rounded-xl shadow-sm p-6"
+        style={{ minHeight: '800px' }}
       />
     </div>
   )
