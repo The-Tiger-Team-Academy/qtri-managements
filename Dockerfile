@@ -1,5 +1,5 @@
 # Step 1: Use the official Node.js 23.6.1 image as a base
-FROM --platform=linux/amd64 node:23.6.1-alpine as builder
+FROM --platform="linux/amd64" node:23.6.1-alpine AS builder
 
 # Set the working directory in the container
 WORKDIR /app
@@ -25,7 +25,7 @@ RUN echo "module.exports = { output: 'export', typescript: { ignoreBuildErrors: 
 RUN npm run build
 
 # Step 2: Use nginx to serve static files
-FROM --platform=linux/amd64 nginx:alpine
+FROM --platform="linux/amd64" nginx:alpine
 
 # Copy the static files from builder stage
 COPY --from=builder /app/out /usr/share/nginx/html
